@@ -2,11 +2,13 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float moveSpeed = 15f;
+    public float moveSpeed = 30f;
     float hAxis;
     float vAxis;
 
     public bool isMove;     // isMove 는 True일떄 이동 불가능 
+
+    bool isBorder;      // 벽 충돌
 
     Vector3 moveVec;
     Rigidbody rigid;
@@ -24,6 +26,11 @@ public class Player : MonoBehaviour
     {
         if(isMove) return;
         Move();
+    }
+
+    void FixedUpdate()
+    {
+        StopToWall();
     }
     void Move()
     {
@@ -44,10 +51,27 @@ public class Player : MonoBehaviour
 
         // 이동 적용
         transform.position += moveVec * moveSpeed * Time.deltaTime;
+        
+        if(isBorder)
+        {
+            transform.position = moveVec * moveSpeed * (Time.deltaTime * 0.5f);
+        }
+        
         if (moveVec != Vector3.zero)
         {
             transform.LookAt(transform.position + moveVec); // 회전
         }
         animator.SetBool("isRun", moveVec != Vector3.zero);
     }
+
+    void StopToWall()
+    {
+        Debug.DrawRay(transform.position, transform.forward * 5f, Color.green);
+        isBorder = Physics.Raycast(transform.position, transform.forward, 5f, LayerMask.GetMask("Wall"));
+        if(isBorder)
+        {
+            Debug.Log("벽에 막혔어");
+        }
+    }
+
 }
