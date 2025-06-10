@@ -27,11 +27,6 @@ public class Player : MonoBehaviour
         if(isMove) return;
         Move();
     }
-
-    void FixedUpdate()
-    {
-        StopToWall();
-    }
     void Move()
     {
         // 입력값 받기
@@ -63,15 +58,4 @@ public class Player : MonoBehaviour
         }
         animator.SetBool("isRun", moveVec != Vector3.zero);
     }
-
-    void StopToWall()
-    {
-        Debug.DrawRay(transform.position, transform.forward * 5f, Color.green);
-        isBorder = Physics.Raycast(transform.position, transform.forward, 5f, LayerMask.GetMask("Wall"));
-        if(isBorder)
-        {
-            Debug.Log("벽에 막혔어");
-        }
-    }
-
 }
