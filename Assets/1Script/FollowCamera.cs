@@ -2,21 +2,35 @@ using UnityEngine;
 
 public class FollowCamera : MonoBehaviour
 {
-    public Transform target;     // 따라갈 대상 (플레이어)
-    public Vector3 offset = new Vector3(0f, 20f, -30f);  // 카메라 위치 오프셋
-    public float followSpeed = 5f; // 따라가는 속도
-    public float mouseSensitivity = 3f; // 마우스 감도
-    public float minYAngle = -89f; // 카메라가 아래로 볼 수 있는 최소 각도
-    public float maxYAngle = 89f;  // 카메라가 위로 볼 수 있는 최대 각도
+    public Transform target;
+    public Vector3 offset = new Vector3(0f, 0f, -50f); // y=0, z=-거리로 변경
+    public float followSpeed = 5f;
+    public float mouseSensitivity = 5f;
+    public float zoomSpeed = 30f;
+    public float targetHeight = 2f; // 타겟 머리 위를 바라보게
 
-    private float currentYaw = 0f; // 좌우 회전 각도
-    private float currentPitch = 20f; // 위아래 회전 각도 (초기값은 offset.y에 맞춤)
+    public float minZoom = 10f;   // 줌 시 더 멀리 가능
+    public float maxZoom = 100f;   // 줌 시 더 가까이 가능
+    public float minYAngle = -150;
+    public float maxYAngle = 150f;
+
+    private float currentYaw = 0f;
+    private float currentPitch = 30f; // 초기 pitch
 
     private void LateUpdate()
     {
         if (target == null) return;
 
-        // 좌클릭을 누르고 있을 때만 회전
+        // 줌 (마우스 휠)
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (Mathf.Abs(scroll) > 0.01f)
+        {
+            float newZoom = offset.magnitude - scroll * zoomSpeed;
+            newZoom = Mathf.Clamp(newZoom, minZoom, maxZoom);
+            offset = offset.normalized * newZoom;
+        }
+
+        // 마우스 좌클릭 시 회전
         if (Input.GetMouseButton(0))
         {
             float mouseX = Input.GetAxis("Mouse X");
@@ -24,16 +38,16 @@ public class FollowCamera : MonoBehaviour
 
             currentYaw += mouseX * mouseSensitivity;
             currentPitch -= mouseY * mouseSensitivity;
-            currentPitch = Mathf.Clamp(currentPitch, minYAngle, maxYAngle);
+
+            // Y축 회전 각도를 자연스럽게 (-10 ~ 80도)
+            currentPitch = Mathf.Clamp(currentPitch, -80f, 80f);
         }
 
-        // 회전값을 쿼터니언으로 변환
         Quaternion rotation = Quaternion.Euler(currentPitch, currentYaw, 0);
         Vector3 desiredPosition = target.position + rotation * offset;
 
-        // 부드럽게 이동
         transform.position = Vector3.Lerp(transform.position, desiredPosition, followSpeed * Time.deltaTime);
-        // 항상 타겟을 바라보게
-        transform.LookAt(target.position);
+        // 타겟의 머리 위를 바라보게
+        transform.LookAt(target.position + Vector3.up * targetHeight);
     }
 }
